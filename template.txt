@@ -1,0 +1,185 @@
+set cut_paste_input [stack 0]
+version 11.3 v3
+Read {{
+ inputs 0
+ file_type exr
+ file {source_seq}
+ format "4448 3096 0 0 4448 3096 1 "
+ first {frame_first}
+ last {frame_last}
+ origfirst {frame_first}
+ origlast {frame_last}
+ origset true
+ raw true
+ name Read26
+ selected true
+ xpos 3810
+ ypos 12794
+}}
+Colorspace {{
+ colorspace_out AlexaV3LogC
+ name lin2logc26
+ selected true
+ xpos 3810
+ ypos 12892
+}}
+OCIOCDLTransform {{
+ slope {{1 1 1}}
+ offset {{0 0 0}}
+ power {{1 1 1}}
+ saturation 1
+ working_space linear
+ read_from_file true
+ file {source_cc}
+ version 61
+ name CDL26
+ tile_color 0xff5555ff
+ selected true
+ xpos 3810
+ ypos 12918
+}}
+Vectorfield {{
+ vfield_file D:/General/WCBH_ArriLog_to_rec709.cube
+ version 239
+ file_type cube
+ name Show_Lut2
+ selected true
+ xpos 3810
+ ypos 12944
+}}
+Transform {{
+ scale 1.0575
+ center {{2224 1548}}
+ name Transform26
+ selected true
+ xpos 3810
+ ypos 12970
+}}
+Reformat {{
+ format "3840 2160 0 0 3840 2160 1 UHD_4K"
+ name Reformat26
+ selected true
+ xpos 3810
+ ypos 12996
+}}
+Crop {{
+ box {{0 48 3840 2112}}
+ name Crop_26
+ selected true
+ xpos 3810
+ ypos 13034
+}}
+Text2 {{
+ font_size_toolbar 180
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message "{vendor_name}"
+ old_message {{{{87 101 116 97 32 68 105 103 105 116 97 108}}
+   }}
+ box {{1806.5 2114 2065.5 2156}}
+ xjustify center
+ yjustify center
+ transforms {{{{0 2}}
+   }}
+ font_size_values {{{{0 180 1 180 2 180 3 180 4 180 5 180 6 180 7 180 8 180 9 180 10 180 11 180}}
+   }}
+ cursor_position 12
+ font {{{{ Arial : Bold : arialbd.ttf : 0 }}}}
+ global_font_scale 0.2
+ font_size 180
+ center {{1024 576}}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{{{994 1146.5}}
+   }}
+ group_animations {{{{0}} imported: 0 selected: items: "root transform/"}}
+ animation_layers {{{{1 11 1024 576 0 0 1 1 0 0 0 0}}
+   }}
+ name Vendor16
+ selected true
+ xpos 3810
+ ypos 13060
+}}
+Text2 {{
+ font_size_toolbar 180
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message {shot_name}
+ old_message {{{{48 52 49 95 71 72 84 95 48 49 53 48 95 118 48 48 51 50 95 67 79 77 80 95 87 84 65 95 50 48 48 50 50 55}}
+   }}
+ box {{20.10416667 2118.018045 989.8958333 2153.981955}}
+ xjustify center
+ yjustify center
+ transforms {{{{0 2}}
+   }}
+ font_size_values {{{{0 180 0 180 1 180 2 180 3 180 4 180 5 180 6 180 7 180 8 180 9 180 10 180 11 180 12 180 13 180 14 180 15 180 16 180 17 180 18 180 19 180 20 180 21 180 22 180 23 180 24 180 25 180 26 180 27 180 28 180 29 180 30 180 31 180 32 180 33 180 0 201}}
+   }}
+ cursor_position 34
+ font {{{{ Arial : Bold : arialbd.ttf : 0 }}}}
+ global_font_scale 0.2
+ font_size 180
+ center {{1024 576}}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{{{994 1146.5}}
+   }}
+ group_animations {{{{0}} imported: 0 selected: items: "root transform/"}}
+ animation_layers {{{{1 11 1024 576 0 0 1 1 0 0 0 0}}
+   }}
+ name FileName26
+ tile_color 0xff5555ff
+ selected true
+ xpos 3810
+ ypos 13086
+}}
+Text2 {{
+ font_size_toolbar 180
+ font_width_toolbar 100
+ font_height_toolbar 100
+ message "\[frame]"
+ old_message {{{{49 48 51 51}}
+   }}
+ old_expression_markers {{{{0 3}}
+   }}
+ box {{3621.25 7 3830.75 43}}
+ transforms {{{{0 2}}
+   }}
+ font_size_values {{{{0 180 1 180 2 180 3 180}}
+   }}
+ cursor_position 7
+ font {{{{ Arial : Bold : arialbd.ttf : 0 }}}}
+ global_font_scale 0.2
+ font_size 180
+ center {{1024 576}}
+ cursor_initialised true
+ autofit_bbox false
+ initial_cursor_position {{{{994 1146.5}}
+   }}
+ group_animations {{{{0}} imported: 0 selected: items: "root transform/"}}
+ animation_layers {{{{1 11 1024 576 0 0 1 1 0 0 0 0}}
+   }}
+ name Frame26
+ selected true
+ xpos 3810
+ ypos 13112
+}}
+Write {{
+ file {file_prores}
+ raw true
+ file_type mov
+ meta_codec ap4h
+ mov32_pixel_format {{{{0}} "default (YCbCrA 8-bit 444 Biased (r408))" "RGBA  8-bit" "YCbCrA 8-bit 444 Biased (r408)" "YCbCr  8-bit 422 (2vuy)"}}
+ mov64_codec ap4h
+ mov64_bitrate 20000
+ mov64_bitrate_tolerance 40000000
+ mov64_quality_min 2
+ mov64_quality_max 31
+ mov64_gop_size 12
+ mov64_b_frames 0
+ checkHashOnRead false
+ version 45
+ name Write_ProRes29
+ selected true
+ xpos 3810
+ ypos 13138
+}}
