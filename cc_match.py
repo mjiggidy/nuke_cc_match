@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# This was written in a hurry.  Will clean up later.
+
 import pathlib, sys, re
 import upco_filesequence
 
@@ -10,12 +12,9 @@ if __name__ == "__main__":
 	vendor_names  = {"WTA":"Weta Digital"}
 	path_template = pathlib.Path(__file__).parent / "template.txt"
 
-
 	glob_cc  = []
 	path_inputs = []
 
-	
-	
 	if len(sys.argv) < 2:
 		sys.stderr.write(f"{usage}\n")
 		exit(1)
@@ -63,27 +62,20 @@ if __name__ == "__main__":
 
 		vfx_id = match.group(0)
 
-#		shot_name = f"{file_cc.stem}_EXR"
-		glob_exr = []
-		{glob_exr.extend(path.rglob(f"{vfx_id}*/")) for path in path_inputs}
-		
-		# Fail if no shots found, or more than one
-		if len(glob_exr) != 1:
-			failed.update({file_cc: "Multiple EXR sequences found." if len(glob_exr) else "No matching EXR sequences found."})
-			continue
-		
-		seq_exr = upco_filesequence.Sequencer(glob_exr[0].glob(f"{vfx_id}*.[eE][xX][rR]"))
+		seq_exr = []
+		{seq_exr.extend(upco_filesequence.Sequencer(x.rglob(f"{vfx_id}*/{vfx_id}*.[eE][xX][rR]")).sequences) for x in path_inputs}
 
 		# If the sequencer detects more than one EXR sequence, or none
-		if len(seq_exr.sequences) != 1:
-			failed.update({file_cc: "EXRs break in sequence." if len(seq_exr.sequences) else "No EXR sequence found in folder."})
+		if len(seq_exr) != 1:
+			failed.update({file_cc: "EXRs break in sequence." if len(seq_exr) else f"No EXR sequences found for VFX ID {vfx_id}."})
 			continue
 
-		seq_exr = seq_exr.sequences[0]
+		seq_exr = seq_exr[0]
 
-		match = pat_vendor_code(seq_exr.parent.name)
+		match = pat_vendor_code.match(seq_exr.parent.name)
 		if not match:
 			failed.update({file_cc: "No vendor code found in EXR folder name."})
+			continue
 
 		vendor_name = vendor_names.get(match.group("vendor_code").upper(), match.group("vendor_code").upper())
 		
@@ -95,7 +87,7 @@ if __name__ == "__main__":
 			"source_cc": str(file_cc.resolve(strict=False)).replace('\\','/'),
 			"shot_name": seq_exr.parent.name,
 			"vendor_name": vendor_name,
-			"prores_file": str(pathlib.Path("D:","Output","prepped_for_studio", seq_exr.parent.parent, f"{seq_exr.parent.name}_prores4444.mov").resolve(strict=False)).replace('\\','/')
+			"file_prores": str(pathlib.Path("D:","Output","prepped_for_studio", seq_exr.parent.parent, f"{seq_exr.parent.name}_prores4444.mov").resolve(strict=False)).replace('\\','/')
 		}})
 
 	# Make sure nothing crazy happened
@@ -129,7 +121,7 @@ if __name__ == "__main__":
 	
 	for shot in success:
 		fields = success.get(shot)
-		path_nuke = pathlib.Path(fields.get("source_seq")).parent.parent / f"{fields.get('shot_name')}_EXR.txt"
+		path_nuke = pathlib.Path(fields.get("source_seq")).parent.parent / f"{fields.get('shot_name')}.txt"
 		#print(path_nuke)
 		
 		try:
