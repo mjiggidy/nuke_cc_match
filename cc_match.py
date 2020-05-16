@@ -1,17 +1,30 @@
 #!/usr/bin/env python3
-
-# This was written in a hurry.  Will clean up later.
+# This was written in like an hour, so please forgive me.
 
 import pathlib, sys, re
 import upco_filesequence
 
 if __name__ == "__main__":
 
-	usage = f"Usage: {__file__} /path/to/cc/folder/ [/path/to/shots/folder/] [...]"
-
+	# User-configurable settings ==================================================
+	
+	# Vendor codes and their dispaly names.
+	# If not in this list, vendor code will be displayed as-is.
+	# User upper-case vendor codes in this dict.
 	vendor_names  = {"WTA":"Weta Digital"}
+
+	# Regex patterns to identify VFX ID and vendor codes
+	pat_vfx_id = re.compile(r"^\d{3}[a-z]?_([a-z]{3})_\d{4}", re.I)
+	pat_vendor_code = re.compile(r".+_COMP_(?P<vendor_code>[a-z]{3})", re.I)
+
+	# Location of .nk template file
 	path_template = pathlib.Path(__file__).parent / "template.txt"
 
+
+	# Main script below ===========================================================
+
+	usage = f"Usage: {__file__} /path/to/cc/folder/ [/path/to/shots/folder/] [...]"
+	
 	glob_cc  = []
 	path_inputs = []
 
@@ -48,10 +61,6 @@ if __name__ == "__main__":
 	success = {}
 
 	# Find corresponding EXR sequences based on CC named + _EXR
-
-	pat_vfx_id = re.compile(r"^\d{3}[a-z]?_([a-z]{3})_\d{4}", re.I)
-	pat_vendor_code = re.compile(r".+_COMP_(?P<vendor_code>[a-z]{3})", re.I)
-
 	for file_cc in glob_cc:
 
 		# Verify .cc file begins with a VFX ID
@@ -77,7 +86,9 @@ if __name__ == "__main__":
 			failed.update({file_cc: "No vendor code found in EXR folder name."})
 			continue
 
+		# Prepare field data for .nk file
 		vendor_name = vendor_names.get(match.group("vendor_code").upper(), match.group("vendor_code").upper())
+		shot_name = seq_exr.parent.name[:-len("_EXR")] if seq_exr.parent.name.lower().endswith("_exr") else seq_exr.parent.name
 		
 		sys.stdout.write(f"{file_cc.name}\t-> {pathlib.PurePath(seq_exr.grouped())}\n")
 		success.update({file_cc: {
@@ -121,7 +132,7 @@ if __name__ == "__main__":
 	
 	for shot in success:
 		fields = success.get(shot)
-		path_nuke = pathlib.Path(fields.get("source_seq")).parent.parent / f"{fields.get('shot_name')}.txt"
+		path_nuke = pathlib.Path(fields.get("source_seq")).parent.parent / f"{fields.get('shot_name')}.nk"
 		#print(path_nuke)
 		
 		try:
