@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# This was written in like an hour, so please forgive me.
+#Sorry about the spaghetti code.
 
 import pathlib, sys, re
 import upco_filesequence
@@ -38,14 +38,17 @@ if __name__ == "__main__":
 		path_inputs.append(path)
 		glob_cc.extend(path.rglob("*.[cC][cC]"))
 	
+	# Fail if no folders were provided
 	if not len(path_inputs):
 		sys.stderr.write(f"No folders found.\n{usage}\n")
 		exit(1)
+	
+	# Fail if no .cc files were found in those folders
 	elif not len(glob_cc):
 		sys.stderr.write(f"No .CC files found.\n{usage}\n")
 		exit(1)
 	
-	# Make sure nothing crazy happened
+	# Prompt the user to make sure nothing crazy happened
 	while True:
 		choice = input(f"Found {len(glob_cc)} .CC file(s).  Continue? [y/n]: ").strip().lower()
 		if not len(choice) or choice[0] not in ['y','n']:
@@ -60,10 +63,10 @@ if __name__ == "__main__":
 	failed  = {}
 	success = {}
 
-	# Find corresponding EXR sequences based on CC named + _EXR
+	# For each .CC file, find matching .EXR sequences with the same VFX ID
 	for file_cc in glob_cc:
 
-		# Verify .cc file begins with a VFX ID
+		# Identify the VFX ID in the .CC file
 		match = pat_vfx_id.match(file_cc.stem)
 		if not match:
 			failed.update({file_cc: "CC filename does not start with a VFX ID."})
@@ -71,16 +74,20 @@ if __name__ == "__main__":
 
 		vfx_id = match.group(0)
 
+		# Find EXR files which begin with the VFX ID
+		# Use upco_filesequence to identify continuous image sequences (ex 100_BUTT_0800_COMP_FUFX.[1000-1071].exr)
 		seq_exr = []
 		{seq_exr.extend(upco_filesequence.Sequencer(x.rglob(f"{vfx_id}*/{vfx_id}*.[eE][xX][rR]")).sequences) for x in path_inputs}
 
-		# If the sequencer detects more than one EXR sequence, or none
+		# If the sequencer detects either more than one EXR sequence, or no sequences, this is unexpected
 		if len(seq_exr) != 1:
 			failed.update({file_cc: "EXRs break in sequence." if len(seq_exr) else f"No EXR sequences found for VFX ID {vfx_id}."})
 			continue
 
 		seq_exr = seq_exr[0]
 
+		# Identify the vendor code in the folder name of the EXR sequence
+		# May want to use the basename of the file sequence instead?
 		match = pat_vendor_code.match(seq_exr.parent.name)
 		if not match:
 			failed.update({file_cc: "No vendor code found in EXR folder name."})
@@ -88,20 +95,23 @@ if __name__ == "__main__":
 
 		# Prepare field data for .nk file
 		vendor_name = vendor_names.get(match.group("vendor_code").upper(), match.group("vendor_code").upper())
-		shot_name = seq_exr.parent.name[:-len("_EXR")] if seq_exr.parent.name.lower().endswith("_exr") else seq_exr.parent.name
+		shot_name   = seq_exr.parent.name[:-len("_exr")] if seq_exr.parent.name.lower().endswith("_exr") else seq_exr.parent.name
 		
+		# Display succsessful match between .CC and .EXR sequence
 		sys.stdout.write(f"{file_cc.name}\t-> {pathlib.PurePath(seq_exr.grouped())}\n")
+		
+		# Collect field data for this shot
 		success.update({file_cc: {
 			"frame_first": seq_exr.min,
-			"frame_last": seq_exr.max,
-			"source_seq": str(pathlib.Path(seq_exr.parent, f"{seq_exr.basename}%{str(seq_exr.padding).zfill(2)}d{seq_exr.ext}").resolve(strict=False)).replace('\\', '/'),
-			"source_cc": str(file_cc.resolve(strict=False)).replace('\\','/'),
-			"shot_name": seq_exr.parent.name,
+			"frame_last" : seq_exr.max,
+			"source_seq" : str(pathlib.Path(seq_exr.parent, f"{seq_exr.basename}%{str(seq_exr.padding).zfill(2)}d{seq_exr.ext}").resolve(strict=False)).replace('\\', '/'),
+			"source_cc"  : str(file_cc.resolve(strict=False)).replace('\\','/'),
+			"shot_name"  : shot_name,
 			"vendor_name": vendor_name,
 			"file_prores": str(pathlib.Path("D:","Output","prepped_for_studio", seq_exr.parent.parent, f"{seq_exr.parent.name}_prores4444.mov").resolve(strict=False)).replace('\\','/')
 		}})
 
-	# Make sure nothing crazy happened
+	# Before writing .nk files, check with the user to make sure nothing crazy happened
 	sys.stdout.write(f"\n{len(success.keys())} shots matched successfully; {len(failed.keys())} failed.\n")
 	while True:
 		choice = input("Write Nuke scripts? [Yes/No/Details]: ").strip().lower()
@@ -109,13 +119,12 @@ if __name__ == "__main__":
 			continue
 
 		elif choice[0] == 'd':
-
 			# No failures
 			if not len(failed):
 				sys.stdout.write(f"No errors to report.\n")
 				continue
 
-			# Print failures
+			# Print details about failures
 			sys.stdout.write(f"\nThese shots failed:\n")
 			for fail in failed:
 				sys.stdout.write(f"{fail}:\t{failed.get(fail)}\n")
@@ -124,16 +133,17 @@ if __name__ == "__main__":
 		elif choice[0] == 'n':
 			sys.stdout.write("I see.\n")
 			exit(0)
+	
 		else: break
 
 	# Read template
 	txt_template = path_template.read_text()
 	sys.stdout.write('\n')
 	
+	# Write .nk files based on field data per shot
 	for shot in success:
 		fields = success.get(shot)
 		path_nuke = pathlib.Path(fields.get("source_seq")).parent.parent / f"{fields.get('shot_name')}.nk"
-		#print(path_nuke)
 		
 		try:
 			with path_nuke.open('w') as file_nuke:
